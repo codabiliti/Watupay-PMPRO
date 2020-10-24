@@ -36,8 +36,9 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
 	{
 		function PMProGateway($gateway = NULL)
 		{
-			$this->gateway = $gateway;
-			return $this->gateway;
+            $this->gateway = $gateway;
+            $this->id = 'watu-pay'; // payment gateway plugin ID
+            return $this->gateway;
 		}										
 
 		/**
@@ -265,10 +266,10 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                         $morder->getUser();
                         $morder->Gateway->pmpro_pages_shortcode_confirmation('', $event->data->reference);
                         $mode = pmpro_getOption("gateway");
-                        if ($mode == 'sandbox') {
-                            $pk = pmpro_getOption("watupay_tpk");
+                        if ($mode == 'testmode') {
+                            $key = pmpro_getOption("watupay_test_public_key");
                         } else {
-                            $pk = pmpro_getOption("watupay_lpk");
+                            $key = pmpro_getOption("watupay_live_public_key");
                         }
                         break;
                     case 'invoice.create':
@@ -286,8 +287,8 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                 static function getGatewayOptions()
                 {
                     $options = array (
-                        'watupay_lpk',
-                        'watupay_tpk',
+                        'watupay_live_public_key',
+                        'watupay_test_public_key',
                         'gateway',
                         'currency',
                         'tax_state',
@@ -331,18 +332,18 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     </tr>
                     <tr class="gateway gateway_watupay" <?php if($gateway != "watupay") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="watupay_lpk"><?php _e('Live Public Key', 'pmpro');?>:</label>
+                            <label for="watupay_live_public_key"><?php _e('Live Public Key', 'pmpro');?>:</label>
                         </th>
                         <td>
-                            <input type="text" id="watupay_lpk" name="watupay_lpk" size="60" value="<?php echo esc_attr($values['watupay_lpk'])?>" />
+                            <input type="text" id="watupay_live_public_key" name="watupay_live_public_key" size="60" value="<?php echo esc_attr($values['watupay_live_public_key'])?>" />
                         </td>
                     </tr>
                     <tr class="gateway gateway_watupay" <?php if($gateway != "watupay") { ?>style="display: none;"<?php } ?>>
                         <th scope="row" valign="top">
-                            <label for="watupay_tpk"><?php _e('Test Public Key', 'pmpro');?>:</label>
+                            <label for="watupay_test_public_key"><?php _e('Test Public Key', 'pmpro');?>:</label>
                         </th>
                         <td>
-                            <input type="text" id="watupay_tpk" name="watupay_tpk" size="60" value="<?php echo esc_attr($values['watupay_tpk'])?>" />
+                            <input type="text" id="watupay_test_public_key" name="watupay_test_public_key" size="60" value="<?php echo esc_attr($values['watupay_test_public_key'])?>" />
                         </td>
                     </tr>
                    
@@ -426,10 +427,10 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     // echo pmpro_url("confirmation", "?level=" . $order->membership_level->id);
                     // die();
                     $mode = pmpro_getOption("gateway");
-                    if ($mode == 'sandbox') {
-                        $key = pmpro_getOption("watupay_tpk");
+                    if ($mode == 'testmode') {
+                        $key = pmpro_getOption("watupay_test_public_key");
                     } else {
-                        $key = pmpro_getOption("watupay_lpk");
+                        $key = pmpro_getOption("watupay_live_public_key");
                     }
                     if ($key  == '') {
                         echo "Api Keys not set";
@@ -451,6 +452,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     // }
                 $watupay_url = 'https://api.watu.global/v1/payment/initiate';
                     $headers = array(
+                        'Accept'=>'application/json',
                         'Content-Type'  => 'application/json',
                         'Authorization' => 'Bearer '.$key
                     );
@@ -461,7 +463,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                 'amount'       => $koboamount,
                 'reference'    => $order->code,
                 'currency'     => $currency,
-                'service_type' => 'watu-pay',
+                'service_type' => $this->id,
                 'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
                 'metadata' => json_encode(array('custom_fields' => array(
                     array(
@@ -593,7 +595,6 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     }
 
                     if (isset($_REQUEST['error'])) {
-                        echo $_REQUEST['error'];
                         global $pmpro_msg, $pmpro_msgt;
 
                         $pmpro_msg = __("IMPORTANT: Something went wrong during the payment. Please try again later or contact the site support to fix this issue.<br/>" . urldecode($_REQUEST['error']), "pmpro");
@@ -634,15 +635,16 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                             $startdate = apply_filters("pmpro_checkout_start_date", "'" . current_time("mysql") . "'", $morder->user_id, $pmpro_level);
 
                             $mode = pmpro_getOption("gateway");
-                            if ($mode == "sandbox") {
-                                $key = pmpro_getOption("watupay_tpk");
+                            if ($mode == "testmode") {
+                                $key = pmpro_getOption("watupay_test_public_key");
                             } else {
-                                $key = pmpro_getOption("watupay_lpk");
+                                $key = pmpro_getOption("watupay_live_public_key");
                             }
                             $watupay_url = 'https://api.watu.global/v1/transaction/verify/' . $_REQUEST['trxref'];
                             $headers = array(
+                                'Accept'=>'application/json',
                                 'Content-Type'  => 'application/json',
-                                'Authorization' => 'Bearer ' . $key
+                                'Authorization' => 'Bearer '.$key
                             );
                             $args = array(
                                 'headers'   => $headers,
@@ -696,8 +698,9 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                                         $recurrent_url = 'https://api.watu.global/v1/payment/charge/recurrent';
                                         $check_url = 'https://api.watu.global/v1/payment/charge?amount='.$koboamount.'&interval='.$interval;
                                         $headers = array(
+                                            'Accept'=>'application/json',
                                             'Content-Type'  => 'application/json',
-                                            'Authorization' => 'Bearer ' . $key
+                                            'Authorization' => 'Bearer '.$key
                                         );
 
                                         $checkargs = array(
@@ -888,17 +891,18 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     $order->updateStatus("cancelled");
                     $mode = pmpro_getOption("gateway");
                     $code = $order->recurrent_transaction_id;
-                    if ($mode == 'sandbox') {
-                        $key = pmpro_getOption("watupay_tsk");
+                    if ($mode == 'testmode') {
+                        $key = pmpro_getOption("watupay_test_public_key");
                     } else {
-                        $key = pmpro_getOption("watupay_lsk");
+                        $key = pmpro_getOption("watupay_live_public_key");
 
                     }
                     if ($order->recurrent_transaction_id != "") {
                         $watupay_url = 'https://api.watu.global/v1/payment/charge/recurrent/' . $code;
                         $headers = array(
+                            'Accept'=>'application/json',
                             'Content-Type'  => 'application/json',
-                            'Authorization' => 'Bearer ' . $key
+                            'Authorization' => 'Bearer '.$key
                         );
                         $args = array(
                             'headers' => $headers,
@@ -911,8 +915,9 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
 
                                 $watupay_url = 'https://api.watu.global/v1/payment/charge/recurrent/disable';
                                 $headers = array(
+                                    'Accept'=>'application/json',
                                     'Content-Type'  => 'application/json',
-                                    'Authorization' => "Bearer ".$key
+                                    'Authorization' => 'Bearer '.$key
                                 );
                                 $body = array(
                                     'code'  => $watupay_response->data->recurrent_code,
