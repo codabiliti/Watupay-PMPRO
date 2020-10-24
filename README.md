@@ -15,4 +15,6 @@ Something is Coming Up Here
 Something is Coming Up Here
 
 ## Plugin Status
-- Processing.....
+- Started. [x]
+- Processing. [x]
+- Completed []
