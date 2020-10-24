@@ -449,7 +449,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
 
                     // }
                     // }
-                $watupay_url = 'https://api.watu.global/v1/payment/charge';
+                $watupay_url = 'https://api.watu.global/v1/payment/initiate';
                     $headers = array(
                         'Content-Type'  => 'application/json',
                         'Authorization' => 'Bearer '.$key
@@ -461,6 +461,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                 'amount'       => $koboamount,
                 'reference'    => $order->code,
                 'currency'     => $currency,
+                'service_type' => 'watu-pay',
                 'callback_url' => pmpro_url("confirmation", "?level=" . $order->membership_level->id),
                 'metadata' => json_encode(array('custom_fields' => array(
                     array(
@@ -592,6 +593,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     }
 
                     if (isset($_REQUEST['error'])) {
+                        echo $_REQUEST['error'];
                         global $pmpro_msg, $pmpro_msgt;
 
                         $pmpro_msg = __("IMPORTANT: Something went wrong during the payment. Please try again later or contact the site support to fix this issue.<br/>" . urldecode($_REQUEST['error']), "pmpro");
@@ -639,6 +641,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                             }
                             $watupay_url = 'https://api.watu.global/v1/transaction/verify/' . $_REQUEST['trxref'];
                             $headers = array(
+                                'Content-Type'  => 'application/json',
                                 'Authorization' => 'Bearer ' . $key
                             );
                             $args = array(
@@ -689,7 +692,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                                         $amount = $pmpro_level->billing_amount;
                                         $koboamount = $amount*100;
                                         //Create Plan
-                                        $watupay_url = 'https://api.watu.global/v1/payment/initiate';
+                                        $watupay_url = 'https://api.watu.global/v1/payment/charge';
                                         $recurrent_url = 'https://api.watu.global/v1/payment/charge/recurrent';
                                         $check_url = 'https://api.watu.global/v1/payment/charge?amount='.$koboamount.'&interval='.$interval;
                                         $headers = array(
@@ -762,7 +765,6 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                                         }
 
                                     }
-                                    //
                                     // die();
 
                                     $custom_level = array(
@@ -895,6 +897,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                     if ($order->recurrent_transaction_id != "") {
                         $watupay_url = 'https://api.watu.global/v1/payment/charge/recurrent/' . $code;
                         $headers = array(
+                            'Content-Type'  => 'application/json',
                             'Authorization' => 'Bearer ' . $key
                         );
                         $args = array(
@@ -945,5 +948,4 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
     }
 
 ?>
-
 
