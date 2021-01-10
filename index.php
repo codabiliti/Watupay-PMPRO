@@ -1,10 +1,9 @@
 <?php
 /**
  * Plugin Name: Watupay for Paid Membership Pro
- * Description: Watupay Payment Gateway for Paid Membership Pro
+ * Description: Payment Gateway for Paid Membership Pro
  * Author: Omaa
- * Version: 1.0.0
- * Plugin URI: https://digitar.link
+ * Version: 1.0
  * Author URI: https://twitter.com/yojobless
  * License: GPLv2 or later
  **/
@@ -37,7 +36,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
 		function PMProGateway($gateway = NULL)
 		{
             $this->gateway = $gateway;
-            $this->id = 'watu-pay'; // payment gateway plugin ID
+            $this->id = 'watupay'; // payment gateway plugin ID
             return $this->gateway;
 		}										
 
@@ -640,7 +639,7 @@ if (!function_exists('watupay_Pmp_Gateway_load')) {
                             } else {
                                 $key = pmpro_getOption("watupay_live_public_key");
                             }
-                            $watupay_url = 'https://api.watu.global/v1/transaction/verify/' . $_REQUEST['trxref'];
+                            $watupay_url = 'https://api.watu.global/v1/public/transaction/verify/' . $_REQUEST['trxref'];
                             $headers = array(
                                 'Accept'=>'application/json',
                                 'Content-Type'  => 'application/json',
